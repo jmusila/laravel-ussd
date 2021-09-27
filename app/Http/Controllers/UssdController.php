@@ -30,25 +30,25 @@ class UssdController extends Controller
 
     public function handleNewUser($ussd_string, $phone)
     {
-          $ussd_string_exploded = explode ("*",$ussd_string);
+        $ussd_string_exploded = explode("*", $ussd_string);
 
-          // Get menu level from ussd_string reply
-          $level = count($ussd_string_exploded);
+        // Get menu level from ussd_string reply
+        $level = count($ussd_string_exploded);
 
-          if(empty($ussd_string) or $level == 0) {
-              $this->newUserMenu(); // show the home menu
-          }
+        if (empty($ussd_string) or $level == 0) {
+            $this->newUserMenu(); // show the home menu
+        }
 
-          switch ($level) {
+        switch ($level) {
               case ($level == 1 && !empty($ussd_string)):
                   if ($ussd_string_exploded[0] == "1") {
                       // If user selected 1 send them to the registration menu
                       $this->ussd_proceed("Please enter your full name and desired pin separated by commas. \n eg: Jane Doe,1234");
-                  } else if ($ussd_string_exploded[0] == "2") {
+                  } elseif ($ussd_string_exploded[0] == "2") {
                       //If user selected 2, send them the information
                       $this->ussd_stop("You will receive more information on SampleUSSD via sms shortly.");
-                      $this->sendText("This is a subscription service from SampleUSSD.",$phone);
-                  } else if ($ussd_string_exploded[0] == "3") {
+                      $this->sendText("This is a subscription service from SampleUSSD.", $phone);
+                  } elseif ($ussd_string_exploded[0] == "3") {
                       //If user selected 3, exit
                       $this->ussd_stop("Thank you for reaching out to SampleUSSD.");
                   }
@@ -60,16 +60,16 @@ class UssdController extends Controller
               break;
               // N/B: There are no more cases handled as the following requests will be handled by return user
           }
-      }
+    }
 
     public function handleReturnUser($ussd_string, $phone)
     {
-        $ussd_string_exploded = explode ("*",$ussd_string);
+        $ussd_string_exploded = explode("*", $ussd_string);
 
         // Get menu level from ussd_string reply
         $level = count($ussd_string_exploded);
 
-        if(empty($ussd_string) or $level == 0) {
+        if (empty($ussd_string) or $level == 0) {
             $this->returnUserMenu(); // show the home/first menu
         }
 
@@ -78,7 +78,7 @@ class UssdController extends Controller
                 if ($ussd_string_exploded[0] == "1") {
                     // If user selected 1 send them to the login menu
                     $this->ussd_proceed("Kindly input your pin");
-                } else if ($ussd_string_exploded[0] == "2") {
+                } elseif ($ussd_string_exploded[0] == "2") {
                     //If user selected 2, end session
                     $this->ussd_stop("Thank you for reaching out to SampleUSSD.");
                 } else {
@@ -93,11 +93,11 @@ class UssdController extends Controller
             case 3:
                 if ($ussd_string_exploded[2] == "1") {
                     $this->ussd_stop("You will receive an sms shortly.");
-                    $this->sendText("You have successfully subscribed to updates from SampleUSSD.",$phone);
-                } else if ($ussd_string_exploded[2] == "2") {
+                    $this->sendText("You have successfully subscribed to updates from SampleUSSD.", $phone);
+                } elseif ($ussd_string_exploded[2] == "2") {
                     $this->ussd_stop("You will receive more information on SampleUSSD via sms shortly.");
-                    $this->sendText("This is a subscription service from SampleUSSD.",$phone);
-                } else if ($ussd_string_exploded[2] == "3") {
+                    $this->sendText("This is a subscription service from SampleUSSD.", $phone);
+                } elseif ($ussd_string_exploded[2] == "3") {
                     $this->ussd_stop("Thanks for reaching out to SampleUSSD.");
                 } else {
                     $this->ussd_stop("Invalid input!");
@@ -113,7 +113,7 @@ class UssdController extends Controller
 
     public function ussd_stop($ussd_text)
     {
-    echo "END $ussd_text";
+        echo "END $ussd_text";
     }
 
     /*
@@ -121,11 +121,11 @@ class UssdController extends Controller
     */
     public function ussdRegister($details, $phone)
     {
-        $input = explode(",",$details);//store input values in an array
+        $input = explode(",", $details);//store input values in an array
         $full_name = $input[0];//store full name
         $pin = $input[1];
 
-        $user = new User;
+        $user = new User();
         $user->name = $full_name;
         $user->phone = $phone;
         // You should encrypt the pin
@@ -142,7 +142,7 @@ class UssdController extends Controller
     {
         $user = User::where('phone', $phone)->first();
 
-        if ($user->pin == $details ) {
+        if ($user->pin == $details) {
             return "Success";
         } else {
             return $this->ussd_stop("Login was unsuccessful!");
