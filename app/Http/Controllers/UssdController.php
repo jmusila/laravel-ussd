@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class UssdController extends Controller
@@ -11,51 +12,53 @@ class UssdController extends Controller
      */
     public function ussdMenu(Request $request)
     {
-        $sessionId   = $request->get('session_id');
-        $serviceCode = $request->get('service_code');
-        $phoneNumber = $request->get('phone_number');
-        $text        = $request->get('text');
+        $sessionId   = $request["sessionId"];
+        $serviceCode = $request["serviceCode"];
+        $phone       = $request["phoneNumber"];
+        $text        = $request["text"];
 
-        $ussd_string_exploded = explode("*", $text);
+        header('Content-type: text/plain');
 
+        if (User::where('phone_number', $phone)->exists()) {
+            // Function to handle already registered users
+            $this->handleReturnUser($text, $phone);
+        } else {
+            // Function to handle new users
+            $this->handleNewUser($text, $phone);
+        }
+    }
+
+    public function handleNewUser($ussd_string, $phone)
+    {
+        $ussd_string_exploded = explode("*", $ussd_string);
+
+        // Get menu level from ussd_string reply
         $level = count($ussd_string_exploded);
 
-        if ($text == "") {
-            // first response when a user dials our ussd code
-            $response  = "CON Welcome to CleanGenesis Academy \n";
-            $response .= "1. Register \n";
-            $response .= "2. About CleanGenesis";
-        } elseif ($text == "1") {
-            // when user respond with option one to register
-            $response = "CON Choose which framework to learn \n";
-            $response .= "1. Django Web Framework \n";
-            $response .= "2. Laravel Web Framework";
-        } elseif ($text == "1*1") {
-            // when use response with option django
-            $response = "CON Please enter your first name";
-        } elseif ($ussd_string_exploded[0] == 1 && $ussd_string_exploded[1] == 1 && $level == 3) {
-            $response = "CON Please enter your last name";
-        } elseif ($ussd_string_exploded[0] == 1 && $ussd_string_exploded[1] == 1 && $level == 4) {
-            $response = "CON Please enter your email";
-        } elseif ($ussd_string_exploded[0] == 1 && $ussd_string_exploded[1] == 1 && $level == 5) {
-            // save data in the database
-            $response = "END Your data has been captured successfully! Thank you for registering for Django online classes at HLAB.";
-        } elseif ($text == "1*2") {
-            // when use response with option Laravel
-            $response = "CON Please enter your first name. ";
-        } elseif ($ussd_string_exploded[0] == 1 && $ussd_string_exploded[1] == 2 && $level == 3) {
-            $response = "CON Please enter your last name";
-        } elseif ($ussd_string_exploded[0] == 1 && $ussd_string_exploded[1] == 2 && $level == 4) {
-            $response = "CON Please enter your email";
-        } elseif ($ussd_string_exploded[0] == 1 && $ussd_string_exploded[1] == 2 && $level == 5) {
-            // save data in the database
-            $response = "END Your data has been captured successfully! Thank you for registering for Laravel online classes at HLAB.";
-        } elseif ($text == "2") {
-            // Our response a user respond with input 2 from our first level
-            $response = "END At HLAB we try to find a good balance between theory and practical!.";
+        if (empty($ussd_string) or $level == 0) {
+            $this->newUserMenu(); // show the home menu
         }
-        // send your response back to the API
-        header('Content-type: text/plain');
-        echo $response;
+
+        switch ($level) {
+              case ($level == 1 && !empty($ussd_string)):
+                  if ($ussd_string_exploded[0] == "1") {
+                      // If user selected 1 send them to the registration menu
+                      $this->ussd_proceed("Please enter your full name and desired pin separated by commas. \n eg: Jane Doe,1234");
+                  } elseif ($ussd_string_exploded[0] == "2") {
+                      //If user selected 2, send them the information
+                      $this->ussd_stop("You will receive more information on SampleUSSD via sms shortly.");
+                      $this->sendText("This is a subscription service from SampleUSSD.", $phone);
+                  } elseif ($ussd_string_exploded[0] == "3") {
+                      //If user selected 3, exit
+                      $this->ussd_stop("Thank you for reaching out to SampleUSSD.");
+                  }
+              break;
+              case 2:
+                  if ($this->ussdRegister($ussd_string_exploded[1], $phone) == "success") {
+                      $this->servicesMenu();
+                  }
+              break;
+              // N/B: There are no more cases handled as the following requests will be handled by return user
+          }
     }
 }
