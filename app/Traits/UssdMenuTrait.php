@@ -23,7 +23,7 @@ trait UssdMenuTrait
         $con .= "2. Exit";
         $this->ussd_proceed($con);
     }
-    
+
     public function servicesMenu()
     {
         $serve = "What service are you looking for?\n";
