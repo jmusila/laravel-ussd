@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Traits\SmsTrait;
+use App\Traits\UssdMenuTrait;
 use Illuminate\Http\Request;
 
 class UssdController extends Controller
 {
+    use SmsTrait;
+    use UssdMenuTrait;
     /**
      * Ussd menu
      */
