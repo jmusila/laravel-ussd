@@ -131,7 +131,7 @@ class UssdController extends Controller
 
         $user = new User();
         $user->name = $full_name;
-        $user->phone = $phone;
+        $user->phone_number = $phone;
         // You should encrypt the pin
         $user->pin = $pin;
         $user->save();
@@ -144,7 +144,7 @@ class UssdController extends Controller
      */
     public function ussdLogin($details, $phone)
     {
-        $user = User::where('phone', $phone)->first();
+        $user = User::where('phone_number', $phone)->first();
 
         if ($user->pin == $details) {
             return "Success";
